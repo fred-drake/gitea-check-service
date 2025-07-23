@@ -1,0 +1,3 @@
+[submodule "common-config"]
+	path = common-config
+	url = https://github.com/fred-drake/common-configuration.git

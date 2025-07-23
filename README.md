@@ -192,10 +192,13 @@ fi
 ```
 .
 ├── main.go                 # Main application code
+├── main_test.go           # Comprehensive test suite (83% coverage)
 ├── go.mod                  # Go module definition
+├── justfile               # Development task runner
 ├── Dockerfile              # Container build instructions
 ├── docker-compose.yml      # Local development setup
 ├── .env.example           # Environment template
+├── .gitignore             # Git ignore rules
 ├── .github/
 │   └── workflows/
 │       └── docker.yml     # CI/CD pipeline
@@ -229,7 +232,7 @@ just build
 # Format Go code
 just format
 
-# Run tests with coverage
+# Run tests with coverage (currently 83%+)
 just test
 
 # Run linting checks (golangci-lint, goimports)
@@ -240,6 +243,29 @@ just check
 
 # Fix formatting and import issues
 just lint-fix
+```
+
+### Testing
+
+The project maintains high test coverage (83%+) with comprehensive testing of:
+
+- **Unit Tests**: All business logic functions tested
+- **Integration Tests**: Full HTTP request/response cycles
+- **Error Handling**: Network failures, invalid responses, missing data
+- **Edge Cases**: Malformed JSON, connection timeouts, API errors
+- **Mock Testing**: External API calls properly mocked for reliable testing
+
+**Running Tests:**
+```bash
+# Run all tests
+go test -v
+
+# Run tests with coverage report
+just test
+
+# Generate HTML coverage report
+go test -coverprofile=coverage.out
+go tool cover -html=coverage.out -o coverage.html
 ```
 
 ### Docker Development

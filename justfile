@@ -1,97 +1,25 @@
 # justfile for gitea-check-service
 
-# Default recipe - show available commands
-default:
-    @just --list
+# Project configuration
+APP_NAME := "gitea-check-service"
+APP_MAIN_GO_FILE := "main.go"
 
 # Set environment variables for development
 export GITEA_URL := env_var_or_default("GITEA_URL", "https://git.example.com")
 export TOKEN := env_var_or_default("TOKEN", "test-token")
 export PORT := env_var_or_default("PORT", "8080")
 
-# Check that required tools are available
-check-tools:
-    @echo "Checking required tools..."
-    @which golangci-lint > /dev/null || (echo "golangci-lint not found in PATH" && exit 1)
-    @which govulncheck > /dev/null || (echo "govulncheck not found in PATH" && exit 1)
-    @which goimports-reviser > /dev/null || (echo "goimports-reviser not found in PATH" && exit 1)
-    @echo "All required tools available!"
+# Import common Go justfile targets
+import "common-config/justfile-go"
 
-# Run the application
-run: build
+# Default recipe - show available commands
+default:
+    @just --list
+
+# Project-specific run target with custom startup message  
+run-service: build
     @echo "Starting gitea-check-service on port {{PORT}}..."
-    ./gitea-check-service
-
-# Build the application
-build:
-    @echo "Building gitea-check-service..."
-    go mod tidy
-    go build -o gitea-check-service -ldflags="-s -w" .
-
-# Build for production with optimizations
-build-prod:
-    @echo "Building production binary..."
-    CGO_ENABLED=0 go build -o gitea-check-service \
-        -ldflags="-s -w -X main.version={{`git describe --tags --always --dirty`}}" \
-        -trimpath .
-
-# Run tests with coverage
-test:
-    @echo "Running tests with coverage..."
-    go test -v -race -coverprofile=coverage.out ./...
-    go tool cover -func=coverage.out | grep total | awk '{print "Total coverage: " $3}'
-
-# Run tests and generate HTML coverage report
-test-coverage: test
-    @echo "Generating HTML coverage report..."
-    go tool cover -html=coverage.out -o coverage.html
-    @echo "Coverage report generated: coverage.html"
-
-# Format Go code
-format:
-    @echo "Formatting Go code..."
-    goimports-reviser -rm-unused -set-alias -format -recursive .
-    @echo "Code formatted!"
-
-# Check Go code formatting
-format-check:
-    @echo "Checking Go code formatting..."
-    @if [ -n "$(goimports-reviser -list-diff -rm-unused -set-alias -format -recursive .)" ]; then \
-        echo "formatting issues found:"; \
-        goimports-reviser -list-diff -rm-unused -set-alias -format -recursive .; \
-        exit 1; \
-    fi
-    @echo "Code formatting is correct!"
-
-# Run linting checks
-lint:
-    @echo "Running linting checks..."
-    @echo "→ Running golangci-lint..."
-    golangci-lint run
-    @echo "All linting checks passed!"
-
-# Fix common linting issues
-lint-fix: format
-    @echo "Fixing linting issues..."
-    golangci-lint run --fix
-    @echo "Linting issues fixed!"
-
-# Check for security vulnerabilities
-vulncheck:
-    @echo "Checking for vulnerabilities..."
-    govulncheck ./...
-
-# Run all checks (format-check, test, lint, vulncheck)
-check: format-check test lint vulncheck
-    @echo "All checks passed!"
-
-# Clean build artifacts
-clean:
-    @echo "Cleaning build artifacts..."
-    rm -f gitea-check-service
-    rm -f coverage.out coverage.html
-    go clean -cache
-    @echo "Clean complete!"
+    ./{{APP_NAME}}
 
 # Development setup
 dev-setup: check-tools
@@ -107,11 +35,11 @@ dev-setup: check-tools
 # Docker operations
 docker-build:
     @echo "Building Docker image..."
-    docker build -t gitea-check-service .
+    docker build -t {{APP_NAME}} .
 
 docker-run: docker-build
     @echo "Running Docker container..."
-    docker run --rm -p 8080:8080 --env-file .env gitea-check-service
+    docker run --rm -p 8080:8080 --env-file .env {{APP_NAME}}
 
 # Docker compose operations
 compose-up:
@@ -130,7 +58,7 @@ compose-logs:
 install-hooks:
     @echo "Installing git hooks..."
     @mkdir -p .git/hooks
-    @echo '#!/bin/sh\njust test lint' > .git/hooks/pre-commit
+    @echo '#!/bin/sh\njust check' > .git/hooks/pre-commit
     @chmod +x .git/hooks/pre-commit
     @echo "Pre-commit hook installed!"
 
