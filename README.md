@@ -126,7 +126,7 @@ docker-compose up -d
 ### Option 3: Build from Source
 
 **Prerequisites:**
-- Go 1.21 or later
+- Go 1.23 or later
 
 **Steps:**
 ```bash
